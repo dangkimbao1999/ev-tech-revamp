@@ -42,6 +42,8 @@ export default buildConfig({
     // Supabase Storage (S3-compatible). Without S3_BUCKET, uploads stay on local disk in ./media.
     s3Storage({
       enabled: !!process.env.S3_BUCKET,
+      // Keep the plugin's columns (e.g. media._objectKey) even when disabled, so local and prod share one schema/migration set.
+      alwaysInsertFields: true,
       collections: {
         // Public bucket: serve images straight from Supabase CDN instead of proxying through Next.
         media: process.env.S3_PUBLIC_URL
