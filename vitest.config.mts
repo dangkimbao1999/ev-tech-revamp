@@ -1,12 +1,20 @@
-import { defineConfig } from 'vitest/config'
 import react from '@vitejs/plugin-react'
-import tsconfigPaths from 'vite-tsconfig-paths'
+import path from 'path'
+import { defineConfig } from 'vitest/config'
 
+// Aliases mirror tsconfig "paths" (declared here because test files are excluded from tsconfig).
 export default defineConfig({
-  plugins: [tsconfigPaths(), react()],
+  plugins: [react()],
+  resolve: {
+    alias: {
+      '@payload-config': path.resolve('src/payload.config.ts'),
+      '@': path.resolve('src'),
+    },
+  },
   test: {
     environment: 'jsdom',
-    setupFiles: ['./vitest.setup.ts'],
-    include: ['tests/int/**/*.int.spec.ts'],
+    setupFiles: ['./src/test/setup.ts'],
+    include: ['src/**/*.test.{ts,tsx}'],
+    css: false,
   },
 })
