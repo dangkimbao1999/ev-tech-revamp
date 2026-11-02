@@ -46,7 +46,8 @@ test('search suggests vehicles and products from the API', async () => {
   vi.stubGlobal('fetch', fetch)
   ui()
   fireEvent.change(screen.getByLabelText('Tìm phụ tùng'), { target: { value: 'vf 5' } })
-  await waitFor(() => expect(screen.getByRole('listbox').textContent).toContain('Má phanh VF5'))
+  // generous timeout: 200ms debounce + a slow jsdom when the whole suite runs in parallel
+  await waitFor(() => expect(screen.getByRole('listbox').textContent).toContain('Má phanh VF5'), { timeout: 4000 })
   expect(String(fetch.mock.calls[0][0])).toContain('/api/products?')
   fireEvent.click(screen.getByText('650.000₫'))
   expect(nav.push).toHaveBeenCalledWith('/san-pham/ma-phanh')
