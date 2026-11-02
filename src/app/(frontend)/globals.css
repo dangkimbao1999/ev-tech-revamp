@@ -789,3 +789,7 @@ header.site.scrolled .hdr-top{padding-block:8px}
 .pd-main img{position:absolute;inset:0}
 /* Grid image frames: make the single row fill the frame so img height:100% resolves (square photos stay inside) */
 .pcard .img,.scard .img,.vcard .img,.acard .th,.ritem .ri{grid-template:100%/100%}
+
+/* Route loading state (loading.tsx) */
+.page-loading{min-height:60vh;display:flex;align-items:center;justify-content:center;gap:12px;color:var(--text-2);font-weight:600}
+.page-loading .spin{width:22px;height:22px;border-radius:50%;border:2.5px solid var(--line);border-top-color:var(--indigo);animation:spin .7s linear infinite}
