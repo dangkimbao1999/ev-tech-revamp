@@ -2,7 +2,7 @@ import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { Crumb, EmptyList, Listing, SecHead } from '@/components/shared'
 import { Ic } from '@/components/store'
-import { andWhere, getNav, type ListSP, mediaUrl } from '@/lib/data'
+import { andWhere, db, getNav, type ListSP, mediaUrl } from '@/lib/data'
 import { seo } from '@/lib/seo'
 
 type Props = { params: Promise<{ slug: string }>; searchParams: ListSP }
@@ -19,6 +19,8 @@ export default async function ByVehicle({ params, searchParams }: Props) {
   const v = vehicles.find((x) => x.slug === slug)
   if (!v) notFound()
   const sys = systems.find((s) => s.slug === sp['he-thong'])
+  const p = await db()
+  const counts = await Promise.all(vehicles.map((x) => p.count({ collection: 'products', where: { vehicles: { contains: x.id } } })))
   const img = mediaUrl(v.image)
   return (
     <Listing
@@ -38,9 +40,9 @@ export default async function ByVehicle({ params, searchParams }: Props) {
       side={
         <div className="box">
           <span className="overline">Danh mục sản phẩm</span>
-          {vehicles.map((x) => (
+          {vehicles.map((x, i) => (
             <Link key={x.id} className={`side-item ${x.id === v.id ? 'on' : ''}`} href={`/dong-xe/${x.slug}`} aria-current={x.id === v.id ? 'page' : undefined}>
-              {x.name}<Ic id="right" />
+              {x.name}<span className="cnt">{counts[i].totalDocs}</span><Ic id="right" />
             </Link>
           ))}
         </div>
