@@ -12,6 +12,12 @@ test('shows an accessible loading state', () => {
   expect(status.textContent).toContain('Đang tải')
 })
 
+test('spinner is the site gear icon', () => {
+  const { container } = render(<Loading />)
+  const icon = container.querySelector('svg.spin-gear use')
+  expect(icon?.getAttribute('href')).toBe('#i-gear')
+})
+
 // Supabase runs in Singapore; functions in the default US region add ~200ms per DB query.
 test('Vercel functions run in Singapore next to the database', () => {
   const cfg = JSON.parse(readFileSync(path.resolve('vercel.json'), 'utf8'))
