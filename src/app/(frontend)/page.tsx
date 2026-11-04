@@ -95,7 +95,7 @@ export default async function Home() {
         </div>
       </section>
 
-      <section id="gara" style={{ paddingTop: 72 }}>
+      <section id="gara" style={{ paddingTop: 72, paddingBottom: arts.docs.length > 0 ? 0 : 72 }}>
         <div className="wrap">
           <div className="gara reveal">
             <div className="c">
