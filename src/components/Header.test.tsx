@@ -25,6 +25,7 @@ test('nav lists vehicles/systems dropdowns and hides "Bài viết" without artic
   expect(screen.getAllByText('VinFast VF 5')[0].closest('a')!.getAttribute('href')).toBe('/dong-xe/vinfast-vf-5')
   expect(screen.getAllByText('Hệ thống phanh')[0].closest('a')!.getAttribute('href')).toBe('/he-thong/he-thong-phanh')
   expect(screen.queryByText('Bài viết')).toBeNull()
+  expect(screen.queryByText('Hybrid')).toBeNull() // dropped from the menu in the prototype
 })
 
 test('shows "Bài viết" when articles exist and marks the active section', () => {
