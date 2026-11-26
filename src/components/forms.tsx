@@ -95,7 +95,7 @@ export function ContactForm({ initialMsg }: { initialMsg: string }) {
   const { toast } = useStore()
   const { busy, done, onSubmit } = useSubmit('contact', f)
   return (
-    <form className="formcard" noValidate onSubmit={onSubmit}>
+    <form className="formcard" id="cform" noValidate onSubmit={onSubmit}>
       {done ? (
         <Success title={`Cảm ơn ${f.v.name}!`}>EVTECH đã nhận lời nhắn và sẽ liên hệ lại qua số điện thoại bạn để lại.</Success>
       ) : (

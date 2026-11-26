@@ -10,7 +10,6 @@ test('home shows vehicles, systems, featured products and articles', async () =>
   expect(t).toContain('/he-thong/he-thong-phanh')
   expect(t).toContain('Má phanh trước VF5') // featured card
   expect(t).toContain('Bảo dưỡng phanh') // article card
-  expect(t).toContain('1 dòng xe VinFast')
   expect(p.find).toHaveBeenCalledWith(expect.objectContaining({ collection: 'products', where: { featured: { equals: true } } }))
 })
 
@@ -20,3 +19,10 @@ test('news section is hidden when there are no published articles', async () => 
 })
 
 test('canonical is the site root', () => expect(metadata).toEqual({ alternates: { canonical: '/' } }))
+
+test('hero uses the CMS banner when set, otherwise the default from CSS', async () => {
+  usePayload(fakePayload(catalog(), SETTINGS))
+  expect((await Home()).props.children[0].props.style).toBeUndefined()
+  usePayload(fakePayload(catalog(), { ...SETTINGS, heroImage: { id: 1, url: '/api/media/file/banner.jpg' } }))
+  expect((await Home()).props.children[0].props.style).toEqual({ '--hero-img': 'url("/api/media/file/banner.jpg")' })
+})

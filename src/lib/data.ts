@@ -29,6 +29,22 @@ export const toCard = (p: Product): Card => {
 
 export const getSettings = cache(async () => (await db()).findGlobal({ slug: 'settings' }))
 
+export const zaloUrl = (phone?: string | null) => `https://zalo.me/${(phone || '').replace(/\D/g, '')}`
+
+/** EVTECH's real channels, overridden per label by CMS entries that hold a real http(s) link (placeholders like '#' are ignored). */
+export const socialsOf = (s: { hotline?: string | null; socials?: { label: string; url: string }[] | null }) => {
+  const out = new Map(
+    [
+      { label: 'Facebook', url: 'https://www.facebook.com/EvtechVietNam' },
+      { label: 'Zalo', url: zaloUrl(s.hotline) },
+      { label: 'YouTube', url: 'https://youtube.com/@evtech.phutungxedien' },
+      { label: 'TikTok', url: 'https://www.tiktok.com/@evtech.vn' },
+    ].map((x) => [x.label.toLowerCase(), x]),
+  )
+  for (const x of s.socials ?? []) if (/^https?:\/\//.test(x.url)) out.set(x.label.toLowerCase(), { label: x.label, url: x.url })
+  return [...out.values()]
+}
+
 export const getNav = cache(async () => {
   const p = await db()
   const [vehicles, systems] = await Promise.all([

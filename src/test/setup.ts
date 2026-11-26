@@ -32,3 +32,5 @@ afterEach(() => {
   cleanup()
   localStorage.clear()
 })
+// jsdom has no matchMedia; default to a desktop, mouse-driven screen (tests can vi.stubGlobal their own).
+if (!globalThis.matchMedia) globalThis.matchMedia = ((q: string) => ({ matches: false, media: q, addEventListener() {}, removeEventListener() {} })) as any

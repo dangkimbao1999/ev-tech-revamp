@@ -28,6 +28,7 @@ export default async function BySystem({ params, searchParams }: Props) {
       sp={sp}
       basePath={`/he-thong/${slug}`}
       label={sy.name}
+      cat={{ kind: 'Hệ thống', items: systems.map((x, i) => ({ href: `/he-thong/${x.slug}`, label: x.name, img: mediaUrl(x.image), meta: counts[i].totalDocs, on: x.id === sy.id })) }}
       hero={
         <>
           <Crumb items={[['Phụ tùng theo hệ thống'], [sy.name]]} />

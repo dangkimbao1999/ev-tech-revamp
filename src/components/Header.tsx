@@ -3,7 +3,7 @@ import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { useEffect, useRef, useState } from 'react'
 import { fmt } from '@/lib/fmt'
-import { CopyBtn, Ic, quoteMessage, useStore } from './store'
+import { Ic, PhoneBtn } from './store'
 
 type Item = { name: string; slug: string; img?: string | null }
 type Hit = { href: string; name: string; img: string | null; right: string }
@@ -16,15 +16,23 @@ const hi = (t: string, s: string) => {
 export function Header({ vehicles, systems, hotline, company, tagline, hasArticles }: { vehicles: Item[]; systems: Item[]; hotline: string; company: string; tagline: string; hasArticles: boolean }) {
   const path = usePathname()
   const router = useRouter()
-  const { quote, toast } = useStore()
   const [drawer, setDrawer] = useState(false)
   const [q, setQ] = useState('')
   const [hits, setHits] = useState<Hit[] | null>(null)
   const [idx, setIdx] = useState(-1)
   const timer = useRef<ReturnType<typeof setTimeout>>(undefined)
-  const count = Object.values(quote).reduce((a, b) => a + b.qty, 0)
 
   useEffect(() => setDrawer(false), [path])
+
+  // Short placeholder on phones, where the search box is narrow
+  const [narrow, setNarrow] = useState(false)
+  useEffect(() => {
+    const mq = matchMedia('(max-width:760px)')
+    const on = () => setNarrow(mq.matches)
+    on()
+    mq.addEventListener('change', on)
+    return () => mq.removeEventListener('change', on)
+  }, [])
 
   useEffect(() => {
     clearTimeout(timer.current)
@@ -82,7 +90,7 @@ export function Header({ vehicles, systems, hotline, company, tagline, hasArticl
           >
             <input
               type="search"
-              placeholder="Tìm tên phụ tùng, mã hàng, dòng xe..."
+              placeholder={narrow ? 'Tìm phụ tùng' : 'Tìm tên phụ tùng, mã hàng, dòng xe...'}
               aria-label="Tìm phụ tùng"
               value={q}
               onChange={(e) => setQ(e.target.value)}
@@ -110,23 +118,10 @@ export function Header({ vehicles, systems, hotline, company, tagline, hasArticl
             </div>
           </form>
           <div className="hdr-right">
-            <CopyBtn text={hotline} className="hot">
+            <PhoneBtn num={hotline} className="hot" label={`Liên hệ ${hotline}`}>
               <span className="hot-ic"><Ic id="phone" /></span>
               <span className="hot-t"><small>Hotline</small><b>{hotline}</b></span>
-            </CopyBtn>
-            <CopyBtn text={hotline} className="pill-link">Zalo</CopyBtn>
-            <Link className="pill-link" href="/lien-he">Chat</Link>
-            <button
-              className="cart"
-              type="button"
-              aria-label="Danh sách báo giá"
-              onClick={() =>
-                count ? router.push('/lien-he?msg=' + encodeURIComponent(quoteMessage(quote))) : toast('Danh sách báo giá đang trống. Bấm “Liên hệ báo giá” ở sản phẩm để thêm.')
-              }
-            >
-              <Ic id="cart" />
-              {count > 0 && <span className="cart-n">{count}</span>}
-            </button>
+            </PhoneBtn>
             <button className="burger" aria-label="Mở menu" aria-expanded={drawer} onClick={() => setDrawer(!drawer)}><span /></button>
           </div>
         </div>
@@ -158,7 +153,7 @@ export function Header({ vehicles, systems, hotline, company, tagline, hasArticl
           {nav.map((n) => (
             <Link key={n.label} className={`dl ${n.on || ''}`} href={n.href} onClick={() => setDrawer(false)}>{n.label}</Link>
           ))}
-          <CopyBtn text={hotline} className="btn green block">Hotline {hotline}</CopyBtn>
+          <PhoneBtn num={hotline} className="btn green block">Hotline {hotline}</PhoneBtn>
         </div>
       </div>
     </>

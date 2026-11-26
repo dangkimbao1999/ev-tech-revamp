@@ -34,11 +34,10 @@ test('shows "Bài viết" when articles exist and marks the active section', () 
   expect(screen.getAllByText('Liên hệ')[0].className).toContain('active')
 })
 
-test('empty quote cart shows a hint instead of navigating', () => {
+test('header has no quote cart, only the hotline', () => {
   ui()
-  fireEvent.click(screen.getByLabelText('Danh sách báo giá'))
-  expect(screen.getByText(/Danh sách báo giá đang trống/)).toBeTruthy()
-  expect(nav.push).not.toHaveBeenCalled()
+  expect(screen.queryByLabelText('Danh sách báo giá')).toBeNull()
+  expect(screen.getAllByLabelText(/Liên hệ 0942/).length).toBeGreaterThan(0)
 })
 
 test('search suggests vehicles and products from the API', async () => {
