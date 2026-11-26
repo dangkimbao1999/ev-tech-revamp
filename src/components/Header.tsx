@@ -64,7 +64,6 @@ export function Header({ vehicles, systems, hotline, company, tagline, hasArticl
     { href: '/gioi-thieu', label: 'Giới thiệu', on: active('/gioi-thieu') },
     { href: vehicles[0] ? `/dong-xe/${vehicles[0].slug}` : '/san-pham', label: 'Phụ tùng theo dòng xe', on: active('/dong-xe'), dd: vehicles.map((v) => ({ href: `/dong-xe/${v.slug}`, name: v.name })) },
     { href: systems[0] ? `/he-thong/${systems[0].slug}` : '/san-pham', label: 'Phụ tùng theo hệ thống', on: active('/he-thong'), dd: systems.map((s) => ({ href: `/he-thong/${s.slug}`, name: s.name })) },
-    { href: '/lien-he?msg=hybrid', label: 'Hybrid' },
     { href: '/gara-dai-ly', label: 'Dành cho Gara & Đại lý', on: active('/gara-dai-ly') },
     ...(hasArticles ? [{ href: '/bai-viet', label: 'Bài viết', on: active('/bai-viet') }] : []),
     { href: '/lien-he', label: 'Liên hệ', on: active('/lien-he') },
