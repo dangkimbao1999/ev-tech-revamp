@@ -1,8 +1,8 @@
 import Link from 'next/link'
 import type { Where } from 'payload'
-import { countArticles, db, getNav, getSettings, mediaUrl, PAGE_SIZE, SORTS, toCard } from '@/lib/data'
-import { CopyBtn, Ic, ProductCard } from './store'
-import { SortSelect } from './widgets'
+import { countArticles, db, getNav, getSettings, mediaUrl, PAGE_SIZE, socialsOf, SORTS, toCard, zaloUrl } from '@/lib/data'
+import { CopyBtn, Ic, PhoneBtn, ProductCard } from './store'
+import { Catbar, SortSelect } from './widgets'
 
 export const Arr = () => <Ic id="arrow" cls="arr" />
 
@@ -19,16 +19,34 @@ export const SecHead = ({ ov, t, h, desc, center, h1 }: { ov: string; t: string;
   )
 }
 
-export const Trust = ({ ic, t, d, copy }: { ic: string; t: string; d: string; copy?: string }) => (
-  <div className="trust">
-    <span className="ib"><Ic id={ic} /></span>
-    <div style={{ minWidth: 0 }}>
-      <div className="tt">{t}</div>
-      <div className="td">{d}</div>
-    </div>
-    {copy && <CopyBtn text={copy} />}
-  </div>
+const PHONE_RE = /0\d{3}\.\d{3}\.\d{3}/g
+
+/** Phone numbers in text become tap-to-call/copy buttons. */
+export const Tel = ({ text }: { text: string }) => (
+  <>
+    {text.split(/(0\d{3}\.\d{3}\.\d{3})/).map((x, i) => (i % 2 ? <PhoneBtn key={i} className="tel" num={x} /> : x))}
+  </>
 )
+
+export const Trust = ({ ic, t, d, copy, zalo }: { ic: string; t: string; d: string; copy?: string; zalo?: boolean }) => {
+  const ph = !zalo && (copy || d).match(PHONE_RE)?.[0]
+  return (
+    <div className={`trust ${ph ? 'is-phone' : ''}`}>
+      {ph ? (
+        <PhoneBtn className="ib" num={ph} label={`${t}: liên hệ ${ph}`}><Ic id={ic} /></PhoneBtn>
+      ) : zalo ? (
+        <a className="ib" href={zaloUrl(copy || d)} target="_blank" rel="noopener noreferrer" aria-label="Chat Zalo"><Ic id={ic} /></a>
+      ) : (
+        <span className="ib"><Ic id={ic} /></span>
+      )}
+      <div style={{ minWidth: 0 }}>
+        <div className="tt">{t}</div>
+        <div className="td">{ph ? <Tel text={d} /> : d}</div>
+      </div>
+      {copy && <CopyBtn text={copy} />}
+    </div>
+  )
+}
 
 export const Crumb = ({ items }: { items: [string, string?][] }) => (
   <nav className="crumb" aria-label="Breadcrumb">
@@ -63,7 +81,7 @@ export async function Help() {
       <Ic id="headset" cls="big" />
       <div className="h6">Cần tư vấn phụ tùng?</div>
       <p style={{ margin: 0 }}>Gửi số khung hoặc mô tả, kỹ thuật viên sẽ tư vấn đúng mã phụ tùng.</p>
-      <CopyBtn text={s.hotline!} className="btn white block">{s.hotline}</CopyBtn>
+      <PhoneBtn num={s.hotline!} className="btn white block"><Ic id="phone" />{s.hotline}</PhoneBtn>
     </div>
   )
 }
@@ -79,7 +97,7 @@ export async function CtaBand() {
             <p className="b-lg" style={{ marginBottom: 0 }}>Gửi yêu cầu, EVTECH sẽ tìm đúng mã phụ tùng và báo giá cho bạn trong thời gian sớm nhất.</p>
           </div>
           <div className="actions">
-            <CopyBtn text={s.hotline!} className="btn white lg">Gọi {s.hotline}</CopyBtn>
+            <PhoneBtn num={s.hotline!} className="btn white lg"><Ic id="phone" />Gọi {s.hotline}</PhoneBtn>
             <Link className="btn green lg" href="/lien-he?msg=find">Gửi yêu cầu<Arr /></Link>
           </div>
         </div>
@@ -90,8 +108,10 @@ export async function CtaBand() {
 
 type SP = { sort?: string; page?: string; q?: string }
 
-/** Product listing page body: sidebar + toolbar + grid + pager + CTA. */
-export async function Listing({ where, sp, basePath, hero, side, label, empty }: { where: Where; sp: SP; basePath: string; hero: React.ReactNode; side: React.ReactNode; label: string; empty: React.ReactNode }) {
+type CatItem = { href: string; label: string; img?: string | null; meta?: number; on: boolean }
+
+/** Product listing page body: sidebar + toolbar + grid + pager + CTA. `cat` adds the mobile category/sort bar. */
+export async function Listing({ where, sp, basePath, hero, side, label, empty, cat }: { where: Where; sp: SP; basePath: string; hero: React.ReactNode; side: React.ReactNode; label: string; empty: React.ReactNode; cat?: { kind: string; items: CatItem[] } }) {
   const sort = SORTS.find((s) => s[0] === sp.sort) ?? SORTS[0]
   const page = Math.max(1, Number(sp.page) || 1)
   const res = await (await db()).find({ collection: 'products', where, sort: sort[2], page, limit: PAGE_SIZE, depth: 1 })
@@ -102,6 +122,7 @@ export async function Listing({ where, sp, basePath, hero, side, label, empty }:
   return (
     <div className="view">
       <section className="page-hero"><div className="wrap">{hero}</div></section>
+      {cat && <Catbar kind={cat.kind} items={cat.items} sort={sort[0]} options={SORTS.map(([k, l]) => [k, l])} />}
       <div className="wrap layout">
         <aside className="side">
           {side}
@@ -153,10 +174,17 @@ export async function Footer() {
             <img src="/img/logo_white.png" alt="EVTECH.vn" />
             <p className="b-md" style={{ opacity: 0.85, margin: 0 }}>{s.intro}</p>
             <div className="f-row"><Ic id="pin" /><span>Trụ sở: {s.address}</span></div>
-            <div className="f-row"><Ic id="phone" /><span>Hotline/Zalo: {[s.hotline, s.hotline2].filter(Boolean).join(' – ')}</span></div>
+            <div className="f-row"><Ic id="phone" /><span>Hotline/Zalo: <Tel text={[s.hotline, s.hotline2].filter(Boolean).join(' – ')} /></span></div>
             <div className="f-row"><Ic id="mail" /><span>{s.email} · {s.website}</span></div>
             <div className="social">
-              {s.socials?.map((x) => <a key={x.id} href={x.url} target="_blank" rel="noopener noreferrer">{x.label}</a>)}
+              {socialsOf(s).map((x) => {
+                const ic = SOCIAL_IC[x.label.toLowerCase()]
+                return (
+                  <a key={x.label} href={x.url} target="_blank" rel="noopener noreferrer" aria-label={x.label} title={x.label}>
+                    {ic ? <Ic id={ic} /> : <b aria-hidden="true">{x.label}</b>}
+                  </a>
+                )
+              })}
             </div>
           </div>
           <div className="f-col">
@@ -187,6 +215,21 @@ export async function Footer() {
         </div>
       </div>
     </footer>
+  )
+}
+
+const SOCIAL_IC: Record<string, string> = { facebook: 'fb', youtube: 'yt', tiktok: 'tt' }
+
+/** Floating quick-contact buttons (Messenger, Zalo, hotline). */
+export async function Fab() {
+  const s = await getSettings()
+  const fb = socialsOf(s).find((x) => /facebook/i.test(x.label))?.url
+  return (
+    <div className="fab" role="group" aria-label="Liên hệ nhanh">
+      {fb && <a className="fab-b mess" href={fb} target="_blank" rel="noopener noreferrer" aria-label="Chat Messenger"><Ic id="chat" /><span className="fab-tip">Chat Messenger</span></a>}
+      <a className="fab-b zalo" href={zaloUrl(s.hotline)} target="_blank" rel="noopener noreferrer" aria-label="Chat Zalo"><b>Zalo</b><span className="fab-tip">Chat Zalo</span></a>
+      <PhoneBtn className="fab-b call" num={s.hotline!} label={`Liên hệ hotline ${s.hotline}`}><Ic id="phone" /><span className="fab-tip">Hotline {s.hotline}</span></PhoneBtn>
+    </div>
   )
 }
 

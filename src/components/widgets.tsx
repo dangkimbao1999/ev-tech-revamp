@@ -1,9 +1,9 @@
 'use client'
 import Link from 'next/link'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
-import { useEffect, useLayoutEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import type { Card } from '@/lib/data'
-import { Ic, ProductCard, Qty, useStore } from './store'
+import { Ic, PhoneBtn, ProductCard, useStore } from './store'
 
 /** Moving underline/pill under the active tab, like the prototype. */
 function useIndicator(active: unknown, offset = 0) {
@@ -112,7 +112,7 @@ export function QuickSearch({ vehicles, systems }: { vehicles: Named[]; systems:
 export function FeaturedTabs({ tabs, cards }: { tabs: string[]; cards: Card[] }) {
   const [tab, setTab] = useState('Tất cả')
   const { wrap, ind } = useIndicator(tab)
-  const list = (tab === 'Tất cả' ? cards : cards.filter((c) => c.cat === tab)).slice(0, 5)
+  const list = (tab === 'Tất cả' ? cards : cards.filter((c) => c.cat === tab)).slice(0, 6)
   return (
     <>
       <div className="tabs" role="tablist" ref={wrap}>
@@ -121,7 +121,7 @@ export function FeaturedTabs({ tabs, cards }: { tabs: string[]; cards: Card[] })
         ))}
         <span className="tab-ind" ref={ind} />
       </div>
-      <div className="p-grid c5 fade" key={tab}>
+      <div className="p-grid c5 fade" id="feat" key={tab}>
         {list.length ? (
           list.map((c) => <ProductCard key={c.id} c={c} quote />)
         ) : (
@@ -227,23 +227,87 @@ export function ProductTabs({ labels, panels }: { labels: string[]; panels: Reac
   )
 }
 
-export function BuyBox({ c, hotline }: { c: Pick<Card, 'id' | 'name'>; hotline: string }) {
-  const { quote, addQuote, copy } = useStore()
-  const router = useRouter()
-  const [qty, setQty] = useState(1)
-  const added = !!quote[c.id]
+export function BuyBox({ name, hotline, zalo }: { name: string; hotline: string; zalo: string }) {
+  const { askQuote } = useStore()
   return (
     <>
       <div className="pd-buy">
-        <Qty v={qty} set={setQty} />
-        <button className={`btn green lg quote ${added ? 'added' : ''}`} type="button" style={{ flex: 1 }} onClick={() => addQuote(c, qty)}>
-          {added ? <><Ic id="check" />Đã thêm báo giá</> : 'Liên hệ báo giá'}
-        </button>
+        <button className="btn green lg block" type="button" onClick={() => askQuote(name)}>Liên hệ báo giá<Ic id="arrow" cls="arr" /></button>
       </div>
       <div className="pd-sec">
-        <button className="btn outline" type="button" onClick={() => copy(hotline)}>Zalo tư vấn</button>
-        <button className="btn outline" type="button" onClick={() => router.push('/lien-he?msg=' + encodeURIComponent(`Tôi cần báo giá: ${c.name} × ${qty}.`))}>Gửi yêu cầu báo giá</button>
+        <a className="btn outline" href={zalo} target="_blank" rel="noopener noreferrer">Zalo tư vấn</a>
+        <PhoneBtn className="btn outline" num={hotline}><Ic id="phone" />Gọi tư vấn</PhoneBtn>
       </div>
     </>
+  )
+}
+
+type CatItem = { href: string; label: string; img?: string | null; meta?: number; on: boolean }
+
+/** Mobile-only sticky bar on listing pages: category picker + sort. Also flags <body> so the header un-sticks. */
+export function Catbar({ kind, items, sort, options }: { kind: string; items: CatItem[]; sort: string; options: [string, string][] }) {
+  const router = useRouter()
+  const path = usePathname()
+  const sp = useSearchParams()
+  const [menu, setMenu] = useState<'cat' | 'sort' | null>(null)
+  const ref = useRef<HTMLDivElement>(null)
+  const close = useCallback(() => setMenu(null), [])
+  useOutside(ref, close)
+  useEffect(() => setMenu(null), [path, sp])
+  useEffect(() => {
+    document.body.classList.add('is-list')
+    const esc = (e: KeyboardEvent) => e.key === 'Escape' && setMenu(null)
+    addEventListener('keydown', esc)
+    return () => {
+      document.body.classList.remove('is-list')
+      removeEventListener('keydown', esc)
+    }
+  }, [])
+  const cur = items.find((x) => x.on) ?? items[0]
+  const th = (x?: CatItem) => <span className="cat-th">{x?.img ? <img src={x.img} alt="" /> : <Ic id="gear" />}</span>
+  const toggle = (m: 'cat' | 'sort') => setMenu((v) => (v === m ? null : m))
+  return (
+    <div className={`catbar ${menu ? 'open' : ''}`} ref={ref}>
+      <div className="catbar-row">
+        <button type="button" className="cat-btn" aria-expanded={menu === 'cat'} aria-controls="cat-menu" onClick={() => toggle('cat')}>
+          {th(cur)}
+          <span className="cat-t"><small>{kind}</small><b>{cur?.label ?? 'Tất cả'}</b></span>
+          <Ic id="down" />
+        </button>
+        <button type="button" className="cat-sort" aria-expanded={menu === 'sort'} aria-controls="sort-menu" onClick={() => toggle('sort')}>
+          <Ic id="sort" /><span>Sắp xếp</span>
+        </button>
+      </div>
+      <div className="cat-menu" id="cat-menu" hidden={menu !== 'cat'}>
+        {items.map((x) => (
+          <Link key={x.href} className={`cat-item ${x.on ? 'on' : ''}`} href={x.href} aria-current={x.on ? 'page' : undefined}>
+            {th(x)}
+            <span>{x.label}</span>
+            {x.meta !== undefined && <small>{x.meta}</small>}
+            {x.on && <Ic id="check" cls="tick" />}
+          </Link>
+        ))}
+      </div>
+      <div className="cat-menu" id="sort-menu" hidden={menu !== 'sort'}>
+        {options.map(([k, l]) => (
+          <button
+            key={k}
+            type="button"
+            className={`cat-item ${k === sort ? 'on' : ''}`}
+            aria-selected={k === sort}
+            onClick={() => {
+              const p = new URLSearchParams(sp)
+              p.set('sort', k)
+              p.delete('page')
+              setMenu(null)
+              router.push(`${path}?${p}`, { scroll: false })
+            }}
+          >
+            <span>{l}</span>
+            <Ic id="check" cls="tick" />
+          </button>
+        ))}
+      </div>
+    </div>
   )
 }

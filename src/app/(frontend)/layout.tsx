@@ -1,10 +1,10 @@
 import { Be_Vietnam_Pro } from 'next/font/google'
 import { Header } from '@/components/Header'
-import { Footer } from '@/components/shared'
+import { Fab, Footer } from '@/components/shared'
 import { SPRITE } from '@/components/sprite'
 import { StoreProvider } from '@/components/store'
 import type { Metadata } from 'next'
-import { countArticles, getNav, getSettings, mediaUrl } from '@/lib/data'
+import { countArticles, getNav, getSettings, mediaUrl, socialsOf } from "@/lib/data"
 import { DEFAULT_DESC, JsonLd, SITE_URL } from '@/lib/seo'
 import './globals.css'
 
@@ -40,7 +40,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
             telephone: s.hotline,
             email: s.email,
             address: { "@type": "PostalAddress", streetAddress: s.address, addressLocality: "Hà Nội", addressCountry: "VN" },
-            sameAs: s.socials?.map((x) => x.url).filter((u) => u.startsWith("http")),
+            sameAs: socialsOf(s).map((x) => x.url),
           }}
         />
         <svg width="0" height="0" style={{ position: 'absolute' }} aria-hidden="true">
@@ -57,6 +57,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           />
           <main id="app">{children}</main>
           <Footer />
+          <Fab />
         </StoreProvider>
       </body>
     </html>

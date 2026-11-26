@@ -2,10 +2,10 @@ import { RichText } from '@payloadcms/richtext-lexical/react'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { Fragment } from 'react'
-import { Ck, Crumb, Trust } from '@/components/shared'
+import { Ck, Crumb, Tel, Trust } from '@/components/shared'
 import { Ic } from '@/components/store'
 import { BuyBox, Gallery, ProductTabs } from '@/components/widgets'
-import { db, fmt, getNav, getSettings, mediaUrl } from '@/lib/data'
+import { db, fmt, getNav, getSettings, mediaUrl, zaloUrl } from '@/lib/data'
 import type { Product, System, Vehicle } from '@/payload-types'
 import { JsonLd, seo, SITE_URL } from '@/lib/seo'
 
@@ -91,7 +91,7 @@ export default async function ProductPage({ params }: Props) {
       <p className="b-sm tm" style={{ margin: 0 }}>Khuyến nghị lắp đặt tại gara có kỹ thuật viên xe điện. Liên hệ hotline nếu cần hỗ trợ.</p>
     </Fragment>,
     <p key="w" className="b-lg t2" style={{ margin: 0 }}>
-      Sản phẩm được bảo hành {p.warranty ? `${p.warranty} ` : ''}theo chính sách của EVTECH. Vui lòng liên hệ hotline <b className="navy">{s.hotline}</b> để được tư vấn.
+      Sản phẩm được bảo hành {p.warranty ? `${p.warranty} ` : ''}theo chính sách của EVTECH. Vui lòng liên hệ hotline <b className="navy"><Tel text={s.hotline!} /></b> để được tư vấn.
     </p>,
   ]
 
@@ -138,7 +138,7 @@ export default async function ProductPage({ params }: Props) {
           {p.price ? <div className="price"><small>Giá tham khảo</small><b className="pd-price">{fmt(p.price)}</b></div> : null}
           <Spec rows={specs.filter((x) => x[0] !== 'Nhóm phụ tùng')} />
           <p className="b-sm tm" style={{ margin: 0 }}>* Thông số mang tính tham khảo, vui lòng liên hệ để được tư vấn chính xác theo số khung xe.</p>
-          <BuyBox c={{ id: p.id, name: p.name }} hotline={s.hotline!} />
+          <BuyBox name={p.name} hotline={s.hotline!} zalo={zaloUrl(s.hotline)} />
         </div>
         <aside className="pd-aside">
           <Trust ic="headset" t="Tư vấn kỹ thuật" d={s.hotline!} />

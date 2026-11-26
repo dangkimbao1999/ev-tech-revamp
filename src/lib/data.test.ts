@@ -1,7 +1,7 @@
 import { beforeEach, expect, test } from 'vitest'
 import { catalog, fakePayload, PRODUCT, SETTINGS } from '@/test/helpers'
 import { usePayload } from '@/test/payload-slot'
-import { andWhere, countArticles, getNav, getSettings, mediaUrl, SORTS, toCard } from './data'
+import { andWhere, countArticles, getNav, getSettings, mediaUrl, socialsOf, SORTS, toCard } from './data'
 
 beforeEach(() => {
   usePayload(fakePayload(catalog(), SETTINGS))
@@ -32,3 +32,14 @@ test('getNav / getSettings / countArticles read through Payload', async () => {
 })
 
 test('sort options map to Payload sort keys', () => expect(SORTS.map((s) => s[2])).toEqual(['-createdAt', 'price', '-price', 'name']))
+
+test('socials: real defaults, CMS http links override by label, placeholders ignored', () => {
+  const s = socialsOf({ hotline: '0942.922.000', socials: [{ label: 'Facebook', url: '#' }, { label: 'YouTube', url: 'https://youtube.com/@x' }, { label: 'Shopee', url: 'https://shopee.vn/evtech' }] })
+  expect(Object.fromEntries(s.map((x) => [x.label, x.url]))).toEqual({
+    Facebook: 'https://www.facebook.com/EvtechVietNam',
+    Zalo: 'https://zalo.me/0942922000',
+    YouTube: 'https://youtube.com/@x',
+    TikTok: 'https://www.tiktok.com/@evtech.vn',
+    Shopee: 'https://shopee.vn/evtech',
+  })
+})

@@ -2,37 +2,38 @@ import Link from 'next/link'
 import { ArticleCard, Arr, Ck, SecHead, Trust } from '@/components/shared'
 import { Ic } from '@/components/store'
 import { FeaturedTabs, QuickSearch } from '@/components/widgets'
-import { db, getNav, mediaUrl, toCard } from '@/lib/data'
+import { db, getNav, getSettings, mediaUrl, toCard } from '@/lib/data'
 
 
 export const metadata = { alternates: { canonical: '/' } }
 
 export default async function Home() {
   const p = await db()
-  const [{ vehicles, systems }, featured, arts] = await Promise.all([
+  const [{ vehicles, systems }, featured, arts, s] = await Promise.all([
     getNav(),
     p.find({ collection: 'products', where: { featured: { equals: true } }, limit: 40, depth: 1 }),
     p.find({ collection: 'articles', limit: 4, depth: 1, overrideAccess: false }),
+    getSettings(),
   ])
+  // CMS banner (validated to the fixed size) or the default /img/hero-home.jpg from the CSS
+  const hero = mediaUrl(s.heroImage)
   const named = (xs: { name: string; slug?: string | null }[]) => xs.map((x) => ({ name: x.name, slug: x.slug! }))
 
   return (
-    <div className="view">
-      <section className="hero2" id="about" aria-label="Giải pháp phụ tùng thay thế cho xe điện">
+    <div className="view home">
+      <section className="hero2" id="about" aria-label="Giải pháp phụ tùng thay thế cho xe điện" style={hero ? ({ '--hero-img': `url("${encodeURI(hero)}")` } as React.CSSProperties) : undefined}>
         <div className="wrap">
           <div>
             <h1>Giải pháp phụ tùng thay thế cho <span className="g">xe điện</span></h1>
             <Ck items={['Sản phẩm chất lượng, nguồn gốc rõ ràng', 'Tương thích nhiều dòng xe', 'Hỗ trợ kỹ thuật – tư vấn nhanh', 'Phục vụ gara, đại lý và chủ xe toàn quốc']} />
-            <a className="btn green lg" href="#quick">Tra cứu phụ tùng ngay<Arr /></a>
+            <a className="btn green lg" id="go-quick" href="#quick">Tra cứu phụ tùng ngay<Arr /></a>
           </div>
         </div>
-        <span className="tag t1"><Ic id="check" />{vehicles.length} dòng xe VinFast</span>
-        <span className="tag t2"><Ic id="truck" />Giao hàng toàn quốc</span>
       </section>
 
-      <div className="wrap">
+      <div className="wrap home-tools">
         <div className="trustbar">
-          <Trust ic="cart" t="Sản phẩm đa dạng" d="Tương thích nhiều dòng xe" />
+          <Trust ic="package" t="Sản phẩm đa dạng" d="Tương thích nhiều dòng xe" />
           <Trust ic="headset" t="Hỗ trợ kỹ thuật" d="Tư vấn chuyên nghiệp" />
           <Trust ic="shield" t="Chính sách đại lý hấp dẫn" d="Giá tốt – hỗ trợ lâu dài" />
           <Trust ic="truck" t="Giao hàng toàn quốc" d="Nhanh chóng – đúng hẹn" />
@@ -44,6 +45,7 @@ export default async function Home() {
         <div className="wrap" style={{ display: 'flex', flexDirection: 'column', gap: 32 }}>
           <div className="head-row">
             <SecHead ov="Danh mục dòng xe" t="Chọn" h="dòng xe" />
+            <Link className="link-arrow" href="/san-pham"><span>Xem tất cả<em className="lg-only"> dòng xe</em></span><Ic id="arrow" /></Link>
           </div>
           <div className="grid5">
             {vehicles.map((v) => {
@@ -66,7 +68,7 @@ export default async function Home() {
         <div className="wrap" style={{ display: 'flex', flexDirection: 'column', gap: 32 }}>
           <div className="head-row">
             <SecHead ov="Danh mục phụ tùng" t="Phụ tùng theo" h="hệ thống" />
-            {systems[0] && <Link className="link-arrow" href={`/he-thong/${systems[0].slug}`}><span>Xem tất cả danh mục</span><Ic id="arrow" /></Link>}
+            {systems[0] && <Link className="link-arrow" href={`/he-thong/${systems[0].slug}`}><span>Xem tất cả<em className="lg-only"> danh mục</em></span><Ic id="arrow" /></Link>}
           </div>
           <div className="grid4">
             {systems.map((s) => {
@@ -89,7 +91,7 @@ export default async function Home() {
         <div className="wrap" style={{ display: 'flex', flexDirection: 'column', gap: 28 }}>
           <div className="head-row">
             <SecHead ov="Sản phẩm nổi bật" t="Được lựa chọn" h="nhiều nhất" />
-            <Link className="link-arrow" href="/san-pham"><span>Xem tất cả sản phẩm</span><Ic id="arrow" /></Link>
+            <Link className="link-arrow" href="/san-pham"><span>Xem tất cả<em className="lg-only"> sản phẩm</em></span><Ic id="arrow" /></Link>
           </div>
           <FeaturedTabs tabs={systems.map((s) => s.name)} cards={featured.docs.map(toCard)} />
         </div>
@@ -118,7 +120,7 @@ export default async function Home() {
           <div className="wrap" style={{ display: 'flex', flexDirection: 'column', gap: 32 }}>
             <div className="head-row">
               <SecHead ov="Bài viết" t="Kiến thức kỹ thuật" h="& tin tức" />
-              <Link className="link-arrow" href="/bai-viet"><span>Xem tất cả bài viết</span><Ic id="arrow" /></Link>
+              <Link className="link-arrow" href="/bai-viet"><span>Xem tất cả<em className="lg-only"> bài viết</em></span><Ic id="arrow" /></Link>
             </div>
             <div className="grid4" style={{ gap: 24 }}>
               {arts.docs.map((a) => <ArticleCard key={a.id} a={a} />)}

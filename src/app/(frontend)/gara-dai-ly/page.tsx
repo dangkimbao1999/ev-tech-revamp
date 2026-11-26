@@ -75,7 +75,7 @@ export default async function Gara({ searchParams }: { searchParams: Promise<{ l
             <div className="infocard" id="consult">
               <div className="h5 navy">Cần tư vấn nhanh?</div>
               <Trust ic="phone" t="Hotline" d={[s.hotline, s.hotline2].filter(Boolean).join(' – ')} copy={s.hotline!} />
-              <Trust ic="headset" t="Zalo" d={s.hotline!} copy={s.hotline!} />
+              <Trust ic="headset" t="Zalo" d={s.hotline!} copy={s.hotline!} zalo />
               <Trust ic="mail" t="Email" d={s.email!} copy={s.email!} />
               <Trust ic="clock" t="Thời gian làm việc" d={s.hours!} />
             </div>

@@ -8,7 +8,7 @@ const ids = [...SPRITE.matchAll(/<symbol id="i-([a-z]+)"/g)].map((m) => m[1])
 test('each icon symbol is defined once with a viewBox', () => {
   expect(ids.length).toBeGreaterThan(20)
   expect(new Set(ids).size).toBe(ids.length)
-  expect(SPRITE.match(/<symbol /g)!.length).toBe(SPRITE.match(/viewBox="0 0 24 24"/g)!.length)
+  expect(SPRITE.match(/<symbol /g)!.length).toBe(SPRITE.match(/<symbol id="i-[a-z]+" viewBox="0 0 \d+ \d+"/g)!.length)
 })
 
 test('every icon referenced in the UI exists in the sprite', () => {

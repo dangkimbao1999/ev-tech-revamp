@@ -1,7 +1,7 @@
 import { ContactForm } from '@/components/forms'
 import { Crumb, SecHead, Services, Trust } from '@/components/shared'
-import { CopyBtn, Ic } from '@/components/store'
-import { getSettings } from '@/lib/data'
+import { Ic } from '@/components/store'
+import { getSettings, zaloUrl } from '@/lib/data'
 import { seo } from '@/lib/seo'
 
 export const metadata = seo('/lien-he', 'Liên hệ', 'Liên hệ EVTECH để được tư vấn và báo giá phụ tùng xe ô tô điện VinFast. Hotline/Zalo 0942.922.000 – 0945.544.000. Trụ sở: Xuân Phương, Hà Nội.')
@@ -35,7 +35,7 @@ export default async function Contact({ searchParams }: { searchParams: Promise<
             <Trust ic="mail" t="Email" d={s.email!} copy={s.email!} />
             <Trust ic="pin" t="Trụ sở" d={s.address!} copy={s.address!} />
             <Trust ic="globe" t="Website" d={s.website!} copy={s.website!} />
-            <CopyBtn text={s.hotline!} className="btn green lg block">Chat Zalo ngay<Ic id="arrow" cls="arr" /></CopyBtn>
+            <a className="btn green lg block" href={zaloUrl(s.hotline)} target="_blank" rel="noopener noreferrer">Chat Zalo ngay<Ic id="arrow" cls="arr" /></a>
           </div>
           <Services />
         </div>

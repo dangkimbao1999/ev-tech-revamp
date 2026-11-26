@@ -82,12 +82,10 @@ test('ProductTabs shows one panel at a time', () => {
   expect(screen.getByRole('tabpanel').textContent).toBe('Panel B')
 })
 
-test('BuyBox adds the chosen quantity and can request a quote', () => {
-  ui(<BuyBox c={{ id: 9, name: 'Má phanh' }} hotline="0942.922.000" />)
-  const box = within(document.querySelector<HTMLElement>('.pd-buy')!)
-  fireEvent.click(box.getByLabelText('Tăng'))
-  fireEvent.click(box.getByText('Liên hệ báo giá'))
-  expect(JSON.parse(localStorage.getItem('evt-quote')!)).toEqual({ 9: { name: 'Má phanh', qty: 2 } })
-  fireEvent.click(screen.getByText('Gửi yêu cầu báo giá'))
-  expect(decodeURIComponent(nav.push.mock.calls[0][0])).toBe('/lien-he?msg=Tôi cần báo giá: Má phanh × 2.')
+test('BuyBox asks for a quote and links Zalo', () => {
+  ui(<BuyBox name="Má phanh" hotline="0942.922.000" zalo="https://zalo.me/0942922000" />)
+  fireEvent.click(within(document.querySelector<HTMLElement>('.pd-buy')!).getByText('Liên hệ báo giá'))
+  expect(decodeURIComponent(nav.push.mock.calls[0][0])).toBe('/lien-he?msg=Tôi cần báo giá: Má phanh.#cform')
+  expect(screen.getByText('Zalo tư vấn').getAttribute('href')).toBe('https://zalo.me/0942922000')
+  expect(screen.getByText('Gọi tư vấn')).toBeTruthy()
 })

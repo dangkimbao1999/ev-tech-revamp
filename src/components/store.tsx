@@ -22,10 +22,8 @@ export const Pimg = ({ c, cls = '' }: { c: { img: string | null; name: string };
     </div>
   )
 
-type Quote = Record<number, { name: string; qty: number }>
 type Store = {
-  quote: Quote
-  addQuote: (c: Pick<Card, 'id' | 'name'>, qty?: number) => void
+  askQuote: (name: string) => void
   favs: Set<number>
   toggleFav: (id: number) => void
   toast: (msg: string) => void
@@ -43,24 +41,20 @@ const load = <T,>(k: string, d: T): T => {
   }
 }
 
-export const quoteMessage = (q: Quote) =>
-  'Tôi cần báo giá các phụ tùng sau:\n' + Object.values(q).map((x) => `- ${x.name} × ${x.qty}`).join('\n')
+/** Phones/tablets: hotline links dial straight away. Mouse users get a copy instead (no dialer on desktop). */
+const TOUCH = '(max-width:760px), (hover:none) and (pointer:coarse)'
 
 export function StoreProvider({ children }: { children: React.ReactNode }) {
-  const [quote, setQuote] = useState<Quote>({})
+  const router = useRouter()
   const [favs, setFavs] = useState<Set<number>>(new Set())
   const [toasts, setToasts] = useState<{ id: number; msg: string; out?: boolean }[]>([])
   const [modal, setModal] = useState<{ c: Card; quote: boolean } | null>(null)
   const ready = useRef(false)
 
   useEffect(() => {
-    setQuote(load('evt-quote', {}))
     setFavs(new Set(load<number[]>('evt-favs', [])))
     ready.current = true
   }, [])
-  useEffect(() => {
-    if (ready.current) localStorage.setItem('evt-quote', JSON.stringify(quote))
-  }, [quote])
   useEffect(() => {
     if (ready.current) localStorage.setItem('evt-favs', JSON.stringify([...favs]))
   }, [favs])
@@ -72,11 +66,26 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     setTimeout(() => setToasts((t) => t.filter((x) => x.id !== id)), 2500)
   }, [])
 
+  const copy = useCallback(
+    async (txt: string) => {
+      try {
+        await navigator.clipboard.writeText(txt)
+        toast('Đã sao chép: ' + txt)
+        return true
+      } catch {
+        toast('Chưa sao chép được, hãy chép tay: ' + txt)
+        return false
+      }
+    },
+    [toast],
+  )
+  const closeModal = useCallback(() => setModal(null), [])
+
   const store: Store = {
-    quote,
-    addQuote: (c, qty = 1) => {
-      setQuote((q) => ({ ...q, [c.id]: { name: c.name, qty: (q[c.id]?.qty || 0) + qty } }))
-      toast('Đã thêm vào danh sách báo giá: ' + c.name)
+    askQuote: (name) => {
+      setModal(null)
+      router.push('/lien-he?msg=' + encodeURIComponent(`Tôi cần báo giá: ${name}.`) + '#cform')
+      toast('Đã điền sẵn tên phụ tùng vào lời nhắn')
     },
     favs,
     toggleFav: (id) => {
@@ -90,23 +99,14 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       toast(on ? 'Đã thêm vào danh sách yêu thích' : 'Đã bỏ khỏi danh sách yêu thích')
     },
     toast,
-    copy: async (txt) => {
-      try {
-        await navigator.clipboard.writeText(txt)
-        toast('Đã sao chép: ' + txt)
-        return true
-      } catch {
-        toast(txt)
-        return false
-      }
-    },
+    copy,
     quick: (c, q = false) => setModal({ c, quote: q }),
   }
 
   return (
     <Ctx.Provider value={store}>
       {children}
-      <QuickView m={modal} close={() => setModal(null)} />
+      <QuickView m={modal} close={closeModal} />
       <div className="toasts" aria-live="polite">
         {toasts.map((t) => (
           <div key={t.id} className={`toast ${t.out ? 'out' : ''}`}>
@@ -121,13 +121,10 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
 }
 
 function QuickView({ m, close }: { m: { c: Card; quote: boolean } | null; close: () => void }) {
-  const { addQuote } = useStore()
-  const router = useRouter()
-  const [qty, setQty] = useState(1)
+  const { askQuote } = useStore()
   const closeBtn = useRef<HTMLButtonElement>(null)
   useEffect(() => {
     if (!m) return
-    setQty(1)
     document.body.style.overflow = 'hidden'
     setTimeout(() => closeBtn.current?.focus(), 50)
     const esc = (e: KeyboardEvent) => e.key === 'Escape' && close()
@@ -138,12 +135,6 @@ function QuickView({ m, close }: { m: { c: Card; quote: boolean } | null; close:
     }
   }, [m, close])
   const c = m?.c
-  const order = () => {
-    if (!c) return
-    if (m.quote) addQuote(c, qty)
-    else router.push('/lien-he?msg=' + encodeURIComponent(`Tôi muốn đặt ${qty} × ${c.name}${c.price ? ` (giá tham khảo ${fmt(c.price)})` : ''}.`))
-    close()
-  }
   return (
     <div className={`modal ${m ? 'open' : ''}`} aria-hidden={!m}>
       <div className="scrim" onClick={close} />
@@ -166,13 +157,9 @@ function QuickView({ m, close }: { m: { c: Card; quote: boolean } | null; close:
             <span className="chip"><Ic id="truck" />Giao nhanh toàn quốc</span>
             <span className="chip"><Ic id="headset" />Tư vấn kỹ thuật</span>
           </div>
-          <div style={{ display: 'flex', gap: 12, alignItems: 'center', flexWrap: 'wrap' }}>
-            <span className="b-md t2">Số lượng</span>
-            <Qty v={qty} set={setQty} />
-          </div>
           <div className="actions" style={{ marginTop: 'auto' }}>
-            <button className={`btn lg ${m?.quote ? 'green' : 'primary'}`} onClick={order}>
-              {m?.quote ? 'Thêm vào danh sách báo giá' : 'Liên hệ đặt hàng'}
+            <button className={`btn lg ${m?.quote ? 'green' : 'primary'}`} onClick={() => c && askQuote(c.name)}>
+              Liên hệ báo giá
               <Arr />
             </button>
             {c && (
@@ -187,14 +174,22 @@ function QuickView({ m, close }: { m: { c: Card; quote: boolean } | null; close:
   )
 }
 
-export function Qty({ v, set }: { v: number; set: (n: number) => void }) {
-  const b = (d: number) => set(Math.max(1, Math.min(99, v + d)))
+/** Hotline link: opens the phone's dialer on mobile; on desktop copies the number. */
+export function PhoneBtn({ num, className, label, children }: { num: string; className?: string; label?: string; children?: React.ReactNode }) {
+  const { copy } = useStore()
   return (
-    <div className="qty">
-      <button type="button" onClick={() => b(-1)} aria-label="Giảm">−</button>
-      <output>{v}</output>
-      <button type="button" onClick={() => b(1)} aria-label="Tăng">+</button>
-    </div>
+    <a
+      className={className}
+      href={`tel:${num.replace(/\D/g, '')}`}
+      aria-label={label}
+      onClick={(e) => {
+        if (matchMedia(TOUCH).matches) return
+        e.preventDefault()
+        void copy(num)
+      }}
+    >
+      {children ?? num}
+    </a>
   )
 }
 
@@ -238,7 +233,6 @@ export function ProductCard({ c, quote = false }: { c: Card; quote?: boolean }) 
   const s = useStore()
   const on = s.favs.has(c.id)
   const href = `/san-pham/${c.slug}`
-  const added = !!s.quote[c.id]
   return (
     <article className="pcard">
       <div className="img">
@@ -259,9 +253,7 @@ export function ProductCard({ c, quote = false }: { c: Card; quote?: boolean }) 
           <Link href={href}>{c.name}</Link>
         </h3>
         {quote ? (
-          <button className={`btn green sm block quote ${added ? 'added' : ''}`} onClick={() => s.addQuote(c)}>
-            {added ? <><Ic id="check" />Đã thêm báo giá</> : 'Liên hệ báo giá'}
-          </button>
+          <button className="btn green sm block" type="button" onClick={() => s.askQuote(c.name)}>Liên hệ báo giá</button>
         ) : (
           <>
             <div className="price">

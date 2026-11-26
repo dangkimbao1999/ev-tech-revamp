@@ -628,6 +628,10 @@ export interface Setting {
   website?: string | null;
   address?: string | null;
   hours?: string | null;
+  /**
+   * Bắt buộc đúng 1920×815 px, JPG/PNG/WebP. Nội dung chính nên nằm ở nửa bên phải (bên trái bị che bởi chữ). Để trống để dùng ảnh banner mặc định.
+   */
+  heroImage?: (number | null) | Media;
   socials?:
     | {
         label: string;
@@ -652,6 +656,7 @@ export interface SettingsSelect<T extends boolean = true> {
   website?: T;
   address?: T;
   hours?: T;
+  heroImage?: T;
   socials?:
     | T
     | {

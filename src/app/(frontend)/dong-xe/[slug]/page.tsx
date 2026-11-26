@@ -28,6 +28,7 @@ export default async function ByVehicle({ params, searchParams }: Props) {
       sp={sp}
       basePath={`/dong-xe/${slug}`}
       label={v.name}
+      cat={{ kind: 'Dòng xe', items: vehicles.map((x, i) => ({ href: `/dong-xe/${x.slug}`, label: x.name, img: mediaUrl(x.image), meta: counts[i].totalDocs, on: x.id === v.id })) }}
       hero={
         <>
           <Crumb items={[['Phụ tùng theo dòng xe'], [v.name]]} />
