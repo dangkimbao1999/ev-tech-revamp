@@ -53,6 +53,7 @@ test('Footer shows company contacts and hides "Bài viết" when there are none'
   expect(t).toContain('Xuân Phương, Hà Nội')
   expect(t).toContain('0942.922.000 – 0945.544.000')
   expect(t).not.toContain('/bai-viet')
+  expect(t).not.toMatch(/giao hàng\s*0/) // a falsy count must not render a stray "0"
 })
 
 test('Listing queries products and builds pagination links that keep filters', async () => {

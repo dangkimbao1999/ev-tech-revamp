@@ -165,7 +165,7 @@ export const EmptyList = ({ title, desc }: { title: string; desc: string }) => (
 )
 
 export async function Footer() {
-  const [s, { vehicles }, hasArticles] = await Promise.all([getSettings(), getNav(), countArticles()])
+  const [s, { vehicles }, articleCount] = await Promise.all([getSettings(), getNav(), countArticles()])
   return (
     <footer>
       <div className="wrap">
@@ -205,7 +205,7 @@ export async function Footer() {
             <Link href="/gioi-thieu">Giới thiệu</Link>
             <Link href="/huong-dan-dat-hang">Hướng dẫn đặt hàng</Link>
             <Link href="/thanh-toan-giao-hang">Thanh toán & giao hàng</Link>
-            {hasArticles && <Link href="/bai-viet">Bài viết</Link>}
+            {articleCount > 0 && <Link href="/bai-viet">Bài viết</Link>}
             <Link href="/lien-he">Liên hệ</Link>
           </div>
         </div>
